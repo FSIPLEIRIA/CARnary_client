@@ -1,6 +1,0 @@
-#ifndef CARNARY_LIB_LIBRARY_H
-#define CARNARY_LIB_LIBRARY_H
-
-void hello();
-
-#endif //CARNARY_LIB_LIBRARY_H
