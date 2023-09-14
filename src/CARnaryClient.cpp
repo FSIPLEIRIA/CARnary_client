@@ -30,10 +30,48 @@ namespace carnary::client {
         throw std::runtime_error("Exceeded number of tries. Daemon may be down.");
     }
 
-    void CARnaryClient::negotiate(int daemonfd, const std::string &serviceName, std::uint16_t minHeartbeatRate,
-                                  pid_t myPID) {
+    int CARnaryClient::negotiate(int daemonfd, const std::string &serviceName, std::uint16_t minHeartbeatRate) {
 
-        // TODO
+        // create the negotiation
+        struct negotiation_t negot;
+
+        negot.systemPID = getpid();
+        negot.serviceName = serviceName;
+        negot.minHeartbeatRate = minHeartbeatRate;
+
+        // provide the negotiation to the daemon
+        if(send(daemonfd, &negot, sizeof(struct negotiation_t), 0) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error providing the negotiation to the daemon!");
+        }
+
+        // receive the updated negotiation, containing the allocated watcher port
+        if(recv(daemonfd, &negot, sizeof(struct negotiation_t), MSG_TRUNC | MSG_WAITALL) < 0) {
+            // reply with a nack
+            std::uint8_t res = (std::uint8_t) WATCHER_NACK;
+            if(send(daemonfd, &res, sizeof(std::uint8_t), 0) < 0) {
+                std::cerr << strerror(errno) << std::endl;
+                throw std::runtime_error("Error replying to the daemon with a NACK.");
+            }
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error receiving the negotiation from the daemon!");
+        }
+
+        // reply with an ACK
+        std::uint8_t res = (std::uint8_t) WATCHER_ACK;
+        if(send(daemonfd, &res, sizeof(std::uint8_t), 0) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error replying to the daemon with an ACK.");
+        }
+
+        // connect to the watcher
+        try {
+            this->watcherfd = lib::Utils::createClientSocket("127.0.0.1", negot.monitoringPort, lib::TCP_SOCKET);
+        } catch(std::runtime_error& ex) {
+            throw ex;
+        }
+
+        return this->watcherfd;
     }
 
     void CARnaryClient::cleanup() {
