@@ -146,8 +146,11 @@ namespace carnary::client {
     }
 
     void CARnaryClient::cleanup() {
-        // TODO
-        // close the negotiation socket
+
+        // close the heartbeat socket
+        if(close(this->watcherfd) < 0) {
+            throw std::runtime_error("Error closing the watcher socket file descriptor!");
+        }
     }
 
 } // carnary::client
