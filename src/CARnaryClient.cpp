@@ -82,11 +82,28 @@ namespace carnary::client {
     }
 
     void CARnaryClient::ping() {
-        // TODO
 
         // can't ping if not negotiated
         if(!this->negotiationDone) {
             throw std::runtime_error("Can't ping without negotiating!");
+        }
+
+        // send an heartbeat
+        std::uint8_t val = KEEPALIVE;
+        if(send(this->watcherfd, &val, sizeof(std::uint8_t), 0) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error sending the heartbeat!");
+        }
+
+        // receive the acknowledgement
+        if(recv(this->watcherfd, &val, sizeof(std::uint8_t), MSG_WAITALL | MSG_TRUNC) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error receiving acknowledgement from the watcher!");
+        }
+
+        if(val != WATCHER_ACK) {
+            // something wrong happened on the watcher side
+            throw std::runtime_error("Something wrong happened on the watcher!");
         }
     }
 
