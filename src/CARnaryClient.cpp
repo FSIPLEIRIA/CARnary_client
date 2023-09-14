@@ -40,20 +40,18 @@ namespace carnary::client {
         }
 
         // create the negotiation
-        struct negotiation_t negot;
-
-        negot.systemPID = getpid();
-        negot.serviceName = serviceName;
-        negot.minHeartbeatRate = minHeartbeatRate;
+        this->negotiation.systemPID = getpid();
+        this->negotiation.serviceName = serviceName;
+        this->negotiation.minHeartbeatRate = minHeartbeatRate;
 
         // provide the negotiation to the daemon
-        if(send(daemonfd, &negot, sizeof(struct negotiation_t), 0) < 0) {
+        if(send(daemonfd, &(this->negotiation), sizeof(struct negotiation_t), 0) < 0) {
             std::cerr << strerror(errno) << std::endl;
             throw std::runtime_error("Error providing the negotiation to the daemon!");
         }
 
         // receive the updated negotiation, containing the allocated watcher port
-        if(recv(daemonfd, &negot, sizeof(struct negotiation_t), MSG_TRUNC | MSG_WAITALL) < 0) {
+        if(recv(daemonfd, &(this->negotiation), sizeof(struct negotiation_t), MSG_TRUNC | MSG_WAITALL) < 0) {
             // reply with a nack
             std::uint8_t res = (std::uint8_t) WATCHER_NACK;
             if(send(daemonfd, &res, sizeof(std::uint8_t), 0) < 0) {
@@ -73,7 +71,7 @@ namespace carnary::client {
 
         // connect to the watcher
         try {
-            this->watcherfd = lib::Utils::createClientSocket("127.0.0.1", negot.monitoringPort, lib::TCP_SOCKET);
+            this->watcherfd = lib::Utils::createClientSocket("127.0.0.1", this->negotiation.monitoringPort, lib::TCP_SOCKET);
         } catch(std::runtime_error& ex) {
             throw ex;
         }
@@ -93,11 +91,34 @@ namespace carnary::client {
     }
 
     void CARnaryClient::emergency() {
-        // TODO
 
         // can't enter emergency if not negotiated
         if(!this->negotiationDone) {
             throw std::runtime_error("Can't signal emergency without negotiating!");
+        }
+
+        // send an emergency heartbeat
+        std::uint8_t val = PANIC;
+        if(send(this->watcherfd, &val, sizeof(std::uint8_t), 0) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error sending the emergency heartbeat!");
+        }
+
+        // receive the acknowledgement
+        if(recv(this->watcherfd, &val, sizeof(std::uint8_t), MSG_TRUNC | MSG_WAITALL) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error receiving the acknowledgement from the watcher!");
+        }
+
+        if(val != WATCHER_ACK) {
+            // something wrong happened on the watcher side
+            throw std::runtime_error("Something wrong happened on the watcher!");
+        }
+
+        // SIGTERM the daemon
+        if(kill(this->negotiation.daemonPID, SIGTERM) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error signaling the daemon to enter emergency!");
         }
     }
 

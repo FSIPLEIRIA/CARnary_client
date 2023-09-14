@@ -7,6 +7,8 @@
 
 #include <carnary/Utils.h>
 #include <carnary/protocol.h>
+#include <sys/types.h>
+#include <signal.h>
 
 namespace carnary::client {
 
@@ -26,6 +28,9 @@ namespace carnary::client {
 
         /*! \brief Is the client connected to the watcher? */
         bool negotiationDone = false;
+
+        /*! \brief The negotiation between this client and the daemon. */
+        struct negotiation_t negotiation;
 
     public:
 
