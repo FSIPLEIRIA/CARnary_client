@@ -69,6 +69,12 @@ namespace carnary::client {
             throw std::runtime_error("Error replying to the daemon with an ACK.");
         }
 
+        // close the negotiation socket
+        if(close(daemonfd) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            throw std::runtime_error("Error closing the negotiation socket file descriptor!");
+        }
+
         // connect to the watcher
         try {
             this->watcherfd = lib::Utils::createClientSocket("127.0.0.1", this->negotiation.monitoringPort, lib::TCP_SOCKET);
@@ -141,6 +147,7 @@ namespace carnary::client {
 
     void CARnaryClient::cleanup() {
         // TODO
+        // close the negotiation socket
     }
 
 } // carnary::client
