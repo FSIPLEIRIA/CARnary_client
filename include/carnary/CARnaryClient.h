@@ -15,8 +15,17 @@ namespace carnary::client {
 
     private:
 
+        /*! \brief Daemon socket file descriptor. */
+        int daemonfd;
+
         /*! \brief Watcher socket file descriptor. */
         int watcherfd;
+
+        /*! \brief Is the client connected to the daemon? */
+        bool connectionDone = false;
+
+        /*! \brief Is the client connected to the watcher? */
+        bool negotiationDone = false;
 
     public:
 
@@ -35,6 +44,12 @@ namespace carnary::client {
          * @return Watcher socket file descriptor.
          */
         int negotiate(int daemonfd, const std::string& serviceName, std::uint16_t minHeartbeatRate);
+
+        /*! \brief Send an heartbeat. */
+        void ping();
+
+        /*! \brief Call this if an emergency occurred (camera lost connection, exceptions, etc.) */
+        void emergency();
 
         /*! \brief Close socket file descriptors. */
         void cleanup();

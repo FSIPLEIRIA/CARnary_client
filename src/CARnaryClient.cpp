@@ -23,6 +23,8 @@ namespace carnary::client {
             }
 
             // if execution reaches this point, the socket was created and connected
+            this->daemonfd = negotiationfd;
+            this->connectionDone = true;
             return negotiationfd;
         }
 
@@ -31,6 +33,11 @@ namespace carnary::client {
     }
 
     int CARnaryClient::negotiate(int daemonfd, const std::string &serviceName, std::uint16_t minHeartbeatRate) {
+
+        // can't negotiate if not connected
+        if(!this->connectionDone) {
+            throw std::runtime_error("Can't negotiate without connecting first!");
+        }
 
         // create the negotiation
         struct negotiation_t negot;
@@ -71,7 +78,27 @@ namespace carnary::client {
             throw ex;
         }
 
+        this->negotiationDone = true;
+
         return this->watcherfd;
+    }
+
+    void CARnaryClient::ping() {
+        // TODO
+
+        // can't ping if not negotiated
+        if(!this->negotiationDone) {
+            throw std::runtime_error("Can't ping without negotiating!");
+        }
+    }
+
+    void CARnaryClient::emergency() {
+        // TODO
+
+        // can't enter emergency if not negotiated
+        if(!this->negotiationDone) {
+            throw std::runtime_error("Can't signal emergency without negotiating!");
+        }
     }
 
     void CARnaryClient::cleanup() {
