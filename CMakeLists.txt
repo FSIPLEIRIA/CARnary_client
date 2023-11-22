@@ -9,4 +9,7 @@ add_library(CARnary_lib SHARED
         src/CARnaryClient.cpp
         src/Utils.cpp)
 
-# TODO: create installation rules
+# installation rules
+install(TARGETS CARnary_lib LIBRARY DESTINATION /usr/lib/CARnary_lib)
+install(DIRECTORY include/carnary DESTINATION /usr/include)
+install(FILES CARnary_libConfig.cmake DESTINATION /usr/lib/CARnary_lib)
