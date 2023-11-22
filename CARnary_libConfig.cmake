@@ -4,5 +4,5 @@ if(NOT TARGET CARnary_lib)
     add_library(CARnary_lib SHARED IMPORTED)
     set_target_properties(CARnary_lib PROPERTIES IMPORTED_LOCATION /usr/lib/CARnary_lib/libCARnary_lib.so)
 
-    target_include_directories(CARnary_lib INTERFACE /usr/include/CARnary_lib)
+    target_include_directories(CARnary_lib INTERFACE /usr/include/carnary)
 endif()
