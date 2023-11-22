@@ -1,0 +1,3 @@
+# ignore binaries
+build
+cmake-build-debug
