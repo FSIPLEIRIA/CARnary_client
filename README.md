@@ -5,3 +5,9 @@ This library contains headers common to the client and the daemon, as well as th
 The client is made to be integrated into every critical package of the pipeline.
 
 Documentation will be added here later.
+
+how to install the build and install the library
+on the build directory
+cmake ..
+make
+sudo make install
