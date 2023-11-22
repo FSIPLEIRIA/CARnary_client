@@ -10,3 +10,9 @@ add_library(CARnary_lib SHARED
         src/Utils.cpp)
 
 # TODO: create installation rules
+
+install(TARGETS CARnary_lib  # Corrected the target name
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
